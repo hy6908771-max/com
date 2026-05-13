@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel V24 - Updated</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #1e88e5; --secondary: #2e7d32; --danger: #d32f2f; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; font-size: 20px; font-weight: bold; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .container { max-width: 800px; margin: 20px auto; padding: 15px; }
+        .section { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #e0e0e0; }
+        h3 { margin-top: 0; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+        .grid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        @media (max-width: 600px) { .grid-row { grid-template-columns: 1fr; } }
+        .input-group { display: flex; flex-direction: column; }
+        label { font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #555; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; transition: 0.3s; }
+        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 5px rgba(30,136,229,0.3); }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 15px; color: white; }
+        .save-btn { background: var(--primary); margin-top: 10px; }
+        .save-btn:hover { background: #1565c0; }
+        .publish-btn { background: var(--secondary); }
+        .publish-btn:hover { background: #1b5e20; }
+        .delete-btn { background: var(--danger); padding: 5px 10px; font-size: 12px; width: auto; }
+        .img-prev { width: 60px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
+        th { background: #f8f9fa; color: #333; }
+    </style>
+</head>
+<body>
+
+<header>
+    অ্যাডমিন প্যানেল V24
+</header>
+
+<div class="container">
+    <div class="section">
+        <h3><i class="fas fa-user-cog"></i> যোগাযোগ সেটিংস</h3>
+        <div class="grid-row">
+            <div class="input-group"><label>অ্যাডমিন নাম</label><input type="text" id="name"></div>
+            <div class="input-group"><label>ফোন (Call)</label><input type="text" id="phone"></div>
+        </div>
+        <div class="grid-row">
+            <div class="input-group"><label>অ্যাডমিন ইমেইল</label><input type="email" id="email"></div>
+            <div class="input-group"><label>প্রোফাইল ফটো লিঙ্ক</label><input type="text" id="photo"></div>
+        </div>
+        <div class="grid-row">
+            <div class="input-group"><label>পার্সোনাল হোয়াটসঅ্যাপ লিঙ্ক</label><input type="text" id="wa_admin_link"></div>
+            <div class="input-group"><label>অর্ডার হোয়াটসঅ্যাপ নম্বর</label><input type="text" id="wa_order_num"></div>
+        </div>
+        <div class="grid-row">
+            <div class="input-group"><label>টেলিগ্রাম লিঙ্ক</label><input type="text" id="telegram"></div>
+            <div class="input-group"><label>ইউটিউব লিঙ্ক</label><input type="text" id="youtube"></div>
+        </div>
+        <button class="save-btn" onclick="updateAdmin()">যোগাযোগ তথ্য সেভ করুন</button>
+    </div>
+
+    <div class="section">
+        <h3><i class="fas fa-images"></i> ব্যানার সেটিংস</h3>
+        <div class="grid-row">
+            <div class="input-group"><label>ব্যানার ১ (URL)</label><input type="text" id="ban1"></div>
+            <div class="input-group"><label>ব্যানার ২ (URL)</label><input type="text" id="ban2"></div>
+        </div>
+        <div class="grid-row">
+            <div class="input-group"><label>ব্যানার ৩ (URL)</label><input type="text" id="ban3"></div>
+            <div class="input-group"><label>ব্যানার ৪ (URL)</label><input type="text" id="ban4"></div>
+        </div>
+        <button class="save-btn" style="background: #fb8c00;" onclick="updateBanners()">ব্যানার লিঙ্ক সেভ করুন</button>
+    </div>
+
+    <div class="section">
+        <h3><i class="fas fa-cart-plus"></i> নতুন পণ্য যোগ</h3>
+        <div class="grid-row">
+            <input type="text" id="p-name" placeholder="পণ্যের নাম">
+            <input type="number" id="p-price" placeholder="দাম">
+        </div>
+        <input type="text" id="p-img" placeholder="ছবির ইউআরএল (Image URL)" style="margin-bottom: 15px;">
+        <textarea id="p-details" rows="3" placeholder="পণ্যের বিস্তারিত বর্ণনা" style="margin-bottom: 10px;"></textarea>
+        <button onclick="addProduct()" class="publish-btn">পণ্য পাবলিশ করুন</button>
+    </div>
+
+    <div class="section">
+        <h3><i class="fas fa-list"></i> পণ্য তালিকা</h3>
+        <div style="overflow-x:auto;">
+            <table id="plist">
+                </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyC0hGkgGnCF3Hnf9HKIcNv50-EfKK08V54",
+        authDomain: "flexi-server-lab-e89b9.firebaseapp.com",
+        databaseURL: "https://flexi-server-lab-e89b9-default-rtdb.firebaseio.com",
+        projectId: "flexi-server-lab-e89b9",
+        storageBucket: "flexi-server-lab-e89b9.firebasestorage.app",
+        messagingSenderId: "445290618555",
+        appId: "1:445290618555:android:f286f82fcebb6fe4e5139e"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // লোড ডেটা
+    db.ref('admin').on('value', snap => {
+        const d = snap.val() || {};
+        document.getElementById('name').value = d.name || '';
+        document.getElementById('phone').value = d.phone || '';
+        document.getElementById('email').value = d.email || '';
+        document.getElementById('photo').value = d.photo || '';
+        document.getElementById('wa_admin_link').value = d.wa_admin_link || '';
+        document.getElementById('wa_order_num').value = d.wa_order_num || '';
+        document.getElementById('telegram').value = d.telegram || '';
+        document.getElementById('youtube').value = d.youtube || '';
+        document.getElementById('ban1').value = d.ban1 || '';
+        document.getElementById('ban2').value = d.ban2 || '';
+        document.getElementById('ban3').value = d.ban3 || '';
+        document.getElementById('ban4').value = d.ban4 || '';
+    });
+
+    // যোগাযোগ তথ্য আপডেট
+    function updateAdmin() {
+        db.ref('admin').update({
+            name: document.getElementById('name').value,
+            phone: document.getElementById('phone').value,
+            email: document.getElementById('email').value,
+            photo: document.getElementById('photo').value,
+            wa_admin_link: document.getElementById('wa_admin_link').value,
+            wa_order_num: document.getElementById('wa_order_num').value,
+            telegram: document.getElementById('telegram').value,
+            youtube: document.getElementById('youtube').value
+        }).then(() => alert("যোগাযোগ তথ্য সফলভাবে সেভ হয়েছে!"));
+    }
+
+    // ব্যানার লিঙ্ক আপডেট (নতুন ফাংশন)
+    function updateBanners() {
+        db.ref('admin').update({
+            ban1: document.getElementById('ban1').value,
+            ban2: document.getElementById('ban2').value,
+            ban3: document.getElementById('ban3').value,
+            ban4: document.getElementById('ban4').value
+        }).then(() => alert("ব্যানার লিঙ্কগুলো সফলভাবে সেভ হয়েছে!"));
+    }
+
+    // পণ্য যোগ করা
+    function addProduct() {
+        const name = document.getElementById('p-name').value;
+        if(!name) return alert("পণ্যের নাম দিন!");
+        
+        db.ref('items').push({
+            name: name,
+            price: document.getElementById('p-price').value,
+            img: document.getElementById('p-img').value,
+            details: document.getElementById('p-details').value
+        }).then(() => { 
+            alert("পণ্য সফলভাবে যোগ হয়েছে!");
+            document.getElementById('p-name').value = '';
+            document.getElementById('p-price').value = '';
+            document.getElementById('p-img').value = '';
+            document.getElementById('p-details').value = '';
+        });
+    }
+
+    // পণ্য তালিকা প্রদর্শন
+    db.ref('items').on('value', snap => {
+        const list = document.getElementById('plist');
+        list.innerHTML = '<tr><th>ছবি</th><th>নাম</th><th>অ্যাকশন</th></tr>';
+        const items = snap.val();
+        for(let key in items) {
+            list.innerHTML += `<tr>
+                <td><img src="${items[key].img}" class="img-prev" onerror="this.src='https://via.placeholder.com/60x40?text=No+Img'"></td>
+                <td>${items[key].name}</td>
+                <td><button onclick="del('${key}')" class="delete-btn">মুছুন</button></td>
+            </tr>`;
+        }
+    });
+
+    // পণ্য ডিলিট করা
+    function del(k) { 
+        if(confirm("আপনি কি নিশ্চিতভাবে এই পণ্যটি ডিলিট করতে চান?")) {
+            db.ref('items/'+k).remove(); 
+        }
+    }
+</script>
+</body>
+</html>
